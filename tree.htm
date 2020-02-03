@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
 	<head>
-		<script src="./bower_components/paper/dist/paper-full.js" > </script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.2/paper-full.min.js" > </script>
 		<style>
 			* {
 				width:100%;
@@ -12,31 +12,12 @@
 		</style>
 	</head>
 <body>
+  <a href=#>export SVG(in console)</a>
 
 	<canvas id='tree' resize></canvas>
 
 <script type="text/paperscript" canvas="tree">
 
-
-	/*
-		TODO:
-			add grain to inner ring using radiating lines? Maybe generate once and then overlay with rotations on each inner path?
-			generate grain over entire tree rather then each ring
-
-			defects
-				darkened overlays
-				 small circles like bubbles? all grouped together?
-
-			update paper.js
-
-			add ability to generate rings based on good/bad years
-			group grain, cracks
-
-
-			try to create sun that makes sense
-	*/
-
-	// Palate colors must be 6 digit hex
 	var seedTypes = [
 		{
 			name: 'White Oak',
@@ -44,19 +25,10 @@
 			bark: {
 				thickness: {
 					max: 35,
-					min: 25
+					min: 20
 				},
 				roughness: 0.8
 			},
-			colorPalate: {
-				outerRing: '#bd500d',
-				innerRing: '#ec9c3f',
-				outerBark: '#555555',
-				innerBark: '#312C20',
-
-				crack: '#eeeeee',
-				deepCrack: '#666666'
-			}
 		},
 
 		{
@@ -69,14 +41,6 @@
 				},
 				roughness: 0.3
 			},
-			colorPalate:{
-				outerRing: '#b06019',
-				innerRing: '#e7a353',
-				outerBark: '#4a200e',
-				innerBark: '#8b2507',
-				crack: '#777777',
-				deepCrack: '#1a0300'
-			}
 		},
 
 		{
@@ -87,16 +51,8 @@
 					max: 15,
 					min: 10
 				},
-				roughness: 0.6
+				roughness: 0.1
 			},
-			colorPalate: {
-				outerRing: '#d28a52',
-				innerRing: '#e6caa1',
-				outerBark: '#4a200e',
-				innerBark: '#6e604d',
-				crack: '#777777',
-				deepCrack: '#1a0300'
-			}
 		},
 
 		{
@@ -104,19 +60,11 @@
 			scientificName: 'Pinus aristata',
 			bark: {
 				thickness: {
-					max: 15,
+					max: 35,
 					min: 10
 				},
-				roughness: 0.5
+				roughness: 0.3
 			},
-			colorPalate:{
-				outerRing: '#b69177',
-				innerRing: '#eaccb2',
-				outerBark: '#6e604d',
-				innerBark: '#78787b',
-				crack: '#777777',
-				deepCrack: '#1a0300'
-			}
 		},
 
 		{
@@ -124,60 +72,34 @@
 			scientificName: 'Tsuga sieboldii)',
 			bark: {
 				thickness: {
-					max: 20,
-					min: 10
+					max: 30,
+					min: 20
 				},
-				roughness: 0.4
+				roughness: 1.2
 			},
-			colorPalate: {
-				outerRing: '#AB7E55',
-				innerRing: '#FBCEA5',
-				outerBark: '#636341',
-				innerBark: '#3a3928',
-				crack: '#34403f',
-				deepCrack: '#fcfaed'
-			}
 		},
-
-		{
-			name: 'Grey Scale',
-			scientificName: 'Filmus atrum',
-			bark: {
-				thickness: {
-					max: 20,
-					min: 10
-				},
-				roughness: 0.6
-			},
-			colorPalate:{
-				outerRing: '#333333',
-				innerRing: '#eeeeee',
-				outerBark: '#666666',
-				innerBark: '#888888',
-
-				crack: '#aaaaaa',
-				deepCrack: '#666666'
-			}
-		}
 	];
 
+  project.currentStyle = {
+    strokeColor: '#000000',
+    strokeWidth: 0.1,
+  };
 	var origin = new Point(400, 400);
 
 	var randomString = '';
-	while(randomString.length < 6)
-		randomString += String.fromCharCode((Math.random() * Math.random() * 90) + 45);
-
-	//randomString = 'David Fradkin';
+  var randomStringLen = Math.floor(Math.random() * 200) + 5;
+	while(randomString.length < randomStringLen)
+		randomString += String.fromCharCode((Math.random() * 90) + 45);
 
 	console.log('using ' + randomString);
 	var seedGenerator = new SeedGenerator(randomString);
-	var seed = seedGenerator.generate(10);
+	var seed = seedGenerator.generate(25);
 	console.log(seed);
 
 	var ringGenerator = new RingGenerator(origin, seedGenerator);
 	var illustrator = new Illustrator(origin, seedGenerator);
 
-	drawEnvironment(seed.environment);
+	//drawEnvironment(seed.environment);
 
 	var parent, paths = [], outerIllustratedPath;
 	for(var year=0 ; year <= seed.years ; year++) {
@@ -189,12 +111,8 @@
 			parent = ringGenerator.generate(parent.simplePath);
 
 		var child = paths[paths.length-1];
-
 		if(year > 0 && year <= seed.years) {
 			var options = {};
-
-			if(year === seed.years)
-				options.smoothOuterRing = true;
 
 			outerIllustratedPath = illustrator.illustrateRing(year, child.complexPath, parent.complexPath, options);
 		}
@@ -209,9 +127,10 @@
 	illustrator.illustrateBark(barkPath.complexPath, outerIllustratedPath);
 
 	illustrator.illustrateCracks(paths);
-	illustrator.illustrateGrain(outerIllustratedPath);
+  // This is too heavy and would result in a ton of up/downs
+	//illustrator.illustrateGrain(outerIllustratedPath);
 
-	illustrator.illustrateTitle(outerIllustratedPath);
+	// illustrator.illustrateTitle(outerIllustratedPath);
 
 	for(var i=paths.length-1 ; i >= 0 ; i--) {
 		paths[i].complexPath.remove();
@@ -219,12 +138,8 @@
 	}
 
 	//console.log('exporting to svg');
-	//var svg = paper.project.exportSVG({
-	//	asString: true,
-	//	precision: 2
-	//});
-	//console.log(svg);
-
+	//var svg = paper.project.exportSVG();
+  //console.log(svg);
 
 	function RingGenerator(origin, seedGenerator) {
 		this.seedGenerator = seedGenerator;
@@ -236,12 +151,19 @@
 			this.year = year;
 			this.environmentState = seedGenerator.getEnvironmentState(year);
 			this.thickness = this.calculateThickness();
-			this.color = this.calculateColor(this.thickness);
 		};
 
 		this.generateKnot = function generateKnot() {
 			var knotPath = this.seed.knotPath;
 			knotPath.translate(origin);
+
+      /*
+      var knotFill = new Path();
+      for(var i=0, len=knotPath.segments.length ; i < len ; i++) {
+				var point = knotPath.segments[i].point;
+        var dir = !knotFill.segments.length % 2;
+        knotFill.add(dir ? point : this.origin);
+      }*/
 
 			return {simplePath: knotPath, complexPath: knotPath};
 		}
@@ -279,12 +201,7 @@
 		}
 
 		this.generate = function generate(parentPath) {
-
 			var path = parentPath.clone();
-			//path.visible = true; // reset vis
-			//path.selected = true;
-			//path.strokeColor = 'black';
-
 			var averageRadius = 0;
 			var _self = this;
 			path.segments.map(function(segment) {return averageRadius += _self.origin.getDistance(segment.point);});
@@ -337,63 +254,52 @@
 		}
 
 		this.addDefectsToPath = function addDefectsToPath(path) {
-			if(this.environmentState.defects.length > 0) {
-				var pathWithDefects = path;
-				// add defects
-				for(var g in this.environmentState.defects) {
-					var defect = this.environmentState.defects[g];
+      var pathWithDefects = path;
+      // add defects
+      for(var g in this.environmentState.defects) {
+        var defect = this.environmentState.defects[g];
 
-					// add jitter to defect angle so that the defects arn't perfectly straight
-					var angleJitter = this.seedGenerator.nextInRange(-0.01, 0.01);
+        // add jitter to defect angle so that the defects arn't perfectly straight
+        var angleJitter = this.seedGenerator.nextInRange(-0.01, 0.01);
 
-					// get intersection between ring and defect line
-					var defectPoint = getPointInCircle(900, defect.angle + angleJitter, this.origin);
+        // get intersection between ring and defect line
+        var defectPoint = getPointInCircle(900, defect.angle + angleJitter, this.origin);
 
-					defectPoint = findIntersectionPointInCircle(path, defectPoint, this.origin);
-					var defectSize = 6 * Math.abs(defect.power);
+        defectPoint = findIntersectionPointInCircle(path, defectPoint, this.origin);
+        var defectSize = 6 * Math.abs(defect.power);
 
-					if(defect.shape === 'circle')
-						defectShape = new Path.Circle(defectPoint, defectSize);
-					else
-						defectShape = new Path.RegularPolygon(defectPoint, 3, defectSize);
+        console.log(defectSize);
+        if(defect.shape === 'circle')
+          defectShape = new Path.Circle(defectPoint, defectSize);
+        else
+          defectShape = new Path.RegularPolygon(defectPoint, 3, defectSize);
 
-					var angle = getAngleInCircle(defectPoint, this.origin);
-					defectShape.rotate((angle/Math.PI) * 180);
+        var angle = getAngleInCircle(defectPoint, this.origin);
+        defectShape.rotate((angle/Math.PI) * 180);
 
-					if (!pathWithDefects)
-						pathWithDefects = path;
+        var tmp = pathWithDefects;
+        pathWithDefects = pathWithDefects[defect.power > 0 ? 'unite' : 'subtract'](defectShape);
 
-					pathWithDefects = pathWithDefects[defect.power > 0 ? 'unite' : 'subtract'](defectShape);
+        var complexPath = pathWithDefects;
+        pathWithDefects = new Path(pathWithDefects.pathData);
 
-					// Convert the path item back to a path to avoid complexPaths
-					pathWithDefects = new Path(pathWithDefects.pathData);
+        complexPath.remove();
+        path.remove();
+        defectShape.remove();
 
-					path.remove();
-
-				}
-
-				// TODO: remove this code
-				// path.visible = false;
-				// pathWithDefects.visible = true;
-				// pathWithDefects.selected = true;
-				// end TODO
-
-				return pathWithDefects;
-			} else
-				return path;
+        // removing tmp here causes defects to go crazy
+        // tmp.remove();
+      }
+      return pathWithDefects;
 		}
 
 		this.calculateThickness = function calculateThickness() {
 			var maxChange = this.seed.thickness.max - this.seed.thickness.min;
-			var thickness = easeWithCenter(this.year, this.seed.years, maxChange, 0.3);
+			var thickness = easeWithCenter(this.year, this.seed.years, maxChange, 0.1);
 			// the min thickness is used as our base
 			thickness += this.seed.thickness.min;
 
 			return thickness;
-		}
-
-		this.calculateColor = function calculateColor(thickness) {
-			return this.seed.type.colorPalate.outerRing;
 		}
 	}
 
@@ -402,18 +308,18 @@
 		this.origin = origin;
 		this.seedGenerator = seedGenerator;
 		this.seed = seedGenerator.seed;
-		this.colorPalate = this.seed.type.colorPalate;
 
 		this.illustrateRing = function illustrateRing(year, path, childPath, options) {
-
 			// draw secondary path based on defect path to create fill
 			var outerPath = new Path();
 			var innerPath = new Path();
+      var ringFill = new Path();
 			var darkRingThickness = 0;
 
 			var gap = this.seedGenerator.getGap(year);
 			var inGap = false;
-			for(var offset=0, len=path.length ; offset < len ; offset+=0.5) {
+      var OFFSET = 0.75; // this changes the ring style, 1 makes it zigzags
+			for(var offset=0, len=path.length ; offset < len ; offset+=OFFSET) {
 
 				var outerPoint = path.getPointAt(offset);
 				var childPoint = findIntersectionPointInCircle(childPath, outerPoint, this.origin);
@@ -429,10 +335,6 @@
 				// add jitter to rings
 				var jitter = darkRingThickness * seedGenerator.nextInRange(-0.11, 0.11);
 
-				options.smoothOuterRing = false;
-				if(options.smoothOuterRing)
-					jitter = darkRingThickness * seedGenerator.nextInRange(-0.04, 0.04);
-
 				if(darkRingThickness < 2 && Math.abs(jitter) > 0.02)
 					jitter = 0.02;
 				if(darkRingThickness < 1)
@@ -446,51 +348,39 @@
 				// apply gaps
 				var positionPercent = offset / len;
 				if(gap) {
-					if(!inGap && positionPercent > gap.startPercent && positionPercent < gap.endPercent) {
+					if(!inGap && positionPercent > gap.startPercent && positionPercent < gap.endPercent)
 						inGap = true;
-						outerPath.add(this.origin);
-						innerPath.add(this.origin);
-					}
 
-					if(inGap && positionPercent > gap.endPercent)
+          if(inGap && positionPercent > gap.endPercent)
 						inGap = false;
+
+          ringFill.add(innerPoint);
 				}
 
 				if(!inGap) {
 					outerPath.add(outerPoint);
 					innerPath.add(innerPoint);
+
+          ringFill.add(offset % 1 ? outerPoint : innerPoint);
+          // TODO: this results in double lining but looks better I think
+          ringFill.add(offset % 1 ? innerPoint : outerPoint);
 				}
 			}
 
-			outerPath.fillColor = this.colorPalate.outerRing;
-			outerPath.strokeColor = null;
-
-			innerPath.fillColor = this.colorPalate.innerRing;
-
-			// TODO: forget about fade? Think sharper is better
-			// use the stroke to fade colors between rings
-			// var fadeColor = averageColors(this.colorPalate.outerRing, this.colorPalate.innerRing);
-			fadeColor = this.colorPalate.innerRing;
-
-			innerPath.strokeColor = fadeColor;
-			outerPath.strokeColor = fadeColor;
-			innerPath.strokeWidth = this.seed.thickness.darkPercent * darkRingThickness;
-
-			if(options.smoothOuterRing)
+			/*if(options.smoothOuterRing)
 				outerPath.strokeWidth = 0;
 			else
-				outerPath.strokeWidth = this.seed.thickness.darkPercent * darkRingThickness;
+				outerPath.strokeWidth = this.seed.thickness.darkPercent * darkRingThickness;*/
 
 			outerPath.visible = true;
 			innerPath.visible = true;
 
-			// send to back was causing an error
-			// innerPath.sendToBack();
-			// outerPath.sendToBack();
+      innerPath.strokeColor = "red";
+      outerPath.strokeColor = "green";
 
-			var ringGroup = new Group([outerPath, innerPath]);
-			project.activeLayer.insertChild(0, ringGroup);
-			//project.activeLayer.insertChild(0, outerPath);
+      // TODO: do I want these?
+      innerPath.remove();
+      outerPath.remove();
 
 			return outerPath;
 		}
@@ -498,36 +388,35 @@
 		this.illustrateBark = function illustrateBark(barkPath, parentPath) {
 			var outerPath = barkPath.clone();
 			var innerPath = new Path();
+      var barkFill = new Path();
+      var barkFillReverse = new Path();
 
-			var outerBarkWidth = this.seedGenerator.nextInRange(5,7)
-			for(var offset=0, len=outerPath.length ; offset < len ; offset += this.seedGenerator.nextInRange(10)) {
-				var point = outerPath.getPointAt(offset);
+      //var edgeFill = new Path();
 
-				var radius = this.origin.getDistance(point) - outerBarkWidth;
-				var radiusDelta = this.seed.bark.roughness * this.seedGenerator.nextInRange(this.seed.bark.thickness.min/2);
-				radius += radiusDelta;
+			var outerBarkWidth = this.seed.thickness.max;
+      var RING_COUNT = 2;
+      for(var i=RING_COUNT, currentWidth=outerBarkWidth / RING_COUNT ; i > 0 ; i--) {
+        for(var offset=0, len=outerPath.length ; offset < len ; offset += this.seed.bark.roughness * 10) {
+          var point = outerPath.getPointAt(offset);
 
-				point = getPointInCircle(radius, getAngleInCircle(point, this.origin), this.origin);
+          var radius = this.origin.getDistance(point) - currentWidth;
+          var radiusDelta = this.seed.bark.roughness * this.seedGenerator.nextInRange(this.seed.bark.thickness.min);
+          radius += radiusDelta;
 
-				innerPath.add(point);
-			}
+          var parentPoint = parentPath.getPointAt(offset)
+          var parentRadius = this.origin.getDistance(parentPoint);
 
-			// this line is between the bark start and the last dark ring, it doesn't always show
-			// since we don't know how wide the last ring ended up being but its kind of cool looking
-			var innerOutline = parentPath.clone();
-			innerOutline.simplify();
-			innerOutline.strokeWidth = 8;
-			innerOutline.strokeColor = this.seed.type.colorPalate.outerBark;
+          var angle = getAngleInCircle(point, this.origin);
+          var innerPoint = getPointInCircle(radius, angle, this.origin);
+          innerPath.add(innerPoint);
 
-			outerPath.fillColor = this.seed.type.colorPalate.outerBark;
-			innerPath.fillColor = this.seed.type.colorPalate.innerBark;
-
-			innerPath.closed = true;
-			innerPath.visible = true;
-
-			project.activeLayer.insertChild(0, innerOutline);
-			project.activeLayer.insertChild(0, innerPath);
-			project.activeLayer.insertChild(0, outerPath);
+          var dir = barkFill.segments.length % 2;
+          barkFill.add(point);
+          barkFill.add(innerPoint);
+          barkFillReverse.add(innerPoint);
+          barkFill.add(point);
+        }
+      }
 		}
 
 		this.illustrateGrain = function illustrateGrain(outerPath) {
@@ -556,15 +445,8 @@
 
 				var grainPath = new Path([startPoint, endPoint]);
 				grainPath.visible = true;
-				grainPath.strokeWidth = 0.1;
 
-				grainPath.strokeColor = colorInRangeFromMultiplier(this.seed.type.colorPalate.outerRing,
-					this.seed.type.colorPalate.innerRing,
-					this.seedGenerator.nextMultiplier());
-
-				//grainPath.strokeColor = this.seed.colorPalate.outerRing;
-
-				grainPath.opacity = this.seedGenerator.nextInRange(0.4, 0.8);
+        grainPath.opacity = this.seedGenerator.nextInRange(0.4, 0.8);
 			}
 		}
 
@@ -582,7 +464,6 @@
 			// set text styles
 			var name = new PointText(textPoint);
 			name.justification = 'left';
-			name.fillColor = 'black';
 			name.fontSize = 30;
 			name.fontFamily = 'serif';
 
@@ -592,7 +473,6 @@
 
 			var subtext = new PointText(offsetPoint);
 			subtext.justification = 'left';
-			subtext.fillColor = 'black';
 			subtext.fontSize = 15;
 			subtext.fontFamily = 'serif';
 
@@ -601,7 +481,6 @@
 		}
 
 		this.illustrateCracks = function illustrateCracks(paths, years) {
-
 			// generate cracks
 			// TODO: this should be refactored into main loop
 			var cracks = [], crackCount = this.seedGenerator.nextIndex(this.seed.years);
@@ -635,7 +514,7 @@
 						//change width of cracks slightly
 						var width = this.seedGenerator.nextInRange(0.5, crack.width);
 
-						// add jitter to crack angle so that the cracks jump around between  arn't perfectly straight
+						// add jitter to crack angle so that the cracks jump around between rings
 						var jitter = this.seedGenerator.nextInRange(-2, 2);
 
 						var crackSegmentStart = getPointInCircle(9000, crack.angle, this.origin);
@@ -669,13 +548,9 @@
 					}
 
 					var path = new Path(crackPoints);
-					path.strokeColor = this.seed.type.colorPalate.crack;
-					path.fillColor = crack.width > 1.2 ? this.seed.colorPalate.deepCrack : this.seed.type.colorPalate.crack;
-					path.strokeWidth = crack.width > 1.2 ? crack.width / 2 : crack.width;
 					path.closed = true;
 
 					crackPaths.push(path);
-
 				} catch(e) {
 					console.log('error drawing crack');
 					if(path)
@@ -703,7 +578,7 @@
 
 			var knotCenter = new Point(0, 0);
 			var knotPaths = [
-				new Path.RegularPolygon(knotCenter, 5, 5),
+				new Path.RegularPolygon(knotCenter, 50, 3),
 				new Path.RegularPolygon(knotCenter, 7, 5),
 				new Path.RegularPolygon(knotCenter, 11, 5),
 				new Path.RegularPolygon(knotCenter, 21, 5),
@@ -712,21 +587,21 @@
 			];
 
 			var index = this.nextIndex(knotPaths.length);
-			//index = 5;
+			index = 0;
 			var knotPath = knotPaths[index];
 
 			knotPath.shear(this.nextInRange(0.1));
 			knotPath.rotate(this.nextInRange(360));
-			knotPath.smooth();
 
 			// max thickness is between 10-35, min is 6-10
 			var maxThickness = 11 + this.nextInRange(10);
 			var minThickness = 5 + this.nextInRange(5);
 
 			// ring gaps occur in a low number of rings
-			var gapableYears = years > 12 ? 12 : years;
+			var gapableYears = years > 50 ? 12 : years;
 
 			var gaps=[], gapCount = Math.round(gapableYears * this.nextInRange(0.75));
+
 			for (var i=gapCount-1; i >= 0; i--) {
 				var gap = {};
 				gap.year = this.nextIndex(gapableYears) + 1;
@@ -737,7 +612,7 @@
 			}
 
 			var seedType = seedTypes[this.nextIndex(seedTypes.length)];
-      seedType = seedTypes[2];
+      //seedType = seedTypes[2];
 
 			this.seed = {
 				name: this.input,
@@ -750,7 +625,6 @@
 				gaps: gaps,
 				years: years,
 				type: seedType,
-				colorPalate: seedType.colorPalate,
 				bark: seedType.bark,
 				environment: this.generateEnvironment(years)
 			};
@@ -762,9 +636,9 @@
 			var environment = [];
 
 			// We always add a main defect that spans the entire lifespan
-			environment.push({start:1, end: years-1, power: this.nextInRange(0.5, 0.7), angle : this.nextInRange(Math.PI * 2), type:'sun'});
+			environment.push({start:1, end: years-1, power: this.nextInRange(0.2, 0.5), angle : this.nextInRange(Math.PI * 2), type:'sun'});
 			var sunEnvCount = 0;
-			for(var i=0, len=this.nextInRange(10,25); i < len ; i++) {
+			for(var i=0, len=this.nextInRange(10, 25); i < len ; i++) {
 				var end = years-1;
 				var start = Math.round(this.nextInRange(1, end-1));
 				end = Math.round(this.nextInRange(start+1, end));
@@ -810,6 +684,8 @@
 				if(e.start <= year && e.end > year) {
 					var item = JSON.parse(JSON.stringify(e));
 					item.power = ease(year - item.start, item.end - item.start, item.power);
+
+          if(item.power === 0) continue;
 
 					(item.type === 'sun' ? growthFactors : defects).push(item);
 				}
@@ -860,10 +736,6 @@
 	}
 
 	function easeWithCenter(now, duration, maxValue, center) {
-
-		if(!center)
-			center = 0.5;
-
 		var rc;
 		if(now > (duration * center)) {
 			now -= duration * center;
@@ -882,8 +754,8 @@
 
 	function ease(now, duration, maxValue) {
 		// EXPONENTIAL EASING (Looks worse I think)
-		//var x = now / duration * 2;
-		//return (1 - Math.pow(x-1, 2)) * maxValue;
+		// var x = now / duration * 2;
+		// return (1 - Math.pow(x-1, 2)) * maxValue;
 
 		duration /= 2;
 
@@ -908,20 +780,15 @@
 			var path = new Path();
 			path.add(origin);
 			path.add(getPointInCircle(400, growthFactor.angle, origin));
-
-			if(growthFactor.type === 'sun')
-				path.strokeColor = 'green';
-			else
-				path.strokeColor = 'red';
 		}
 	}
 
 	//angle is in radians
 	function getPointInCircle(radius, angle, origin) {
-        var x = origin.x + radius * Math.cos(angle);
+    var x = origin.x + radius * Math.cos(angle);
 		var y = origin.y + radius * Math.sin(angle);
 
-        return new Point(x, y);
+    return new Point(x, y);
 	}
 
 	//angle is in radians
@@ -942,43 +809,11 @@
 	function findIntersectionPointInCircle(circlePath, point, origin) {
 		var angle = getAngleInCircle(point, origin);
 
-		var radiusPath = new Path([origin,
-			getPointInCircle(1000, angle, origin)]);
+		var radiusPath = new Path([origin, getPointInCircle(1000, angle, origin)]);
 
 		// Get intersection between ring and defect line
-		var intersectionLocation = circlePath.getIntersections(radiusPath)[0];
-
-		// Think there is a bug in get intersection where it misses if there is a point
-		// https://github.com/paperjs/paper.js/issues/477
-		if(!intersectionLocation) {
-
-			// circlePath.visible = true;
-			// circlePath.selected = true;
-			// point.visible = true;
-			// point.selected = true;
-
-
-			//intersectionLocation = circlePath.getNearestLocation(point);
-
-			if(!intersectionLocation) {
-
-				var nearestPoint = null, distance;
-				for(var i=0, len=circlePath.segments.length ; i < len ; i++) {
-					var p = circlePath.segments[i].point;
-					var pDistance = Math.abs(point.x - p.x) + Math.abs(point.y - p.y);
-
-					if(!nearestPoint || pDistance < distance) {
-						nearestPoint = p;
-						distance = pDistance;
-					}
-				}
-
-				if(distance > 30) {
-					console.log('nearest point was pretty far away ' + distance);
-				}
-				return nearestPoint;
-			}
-		}
+    var intersections = circlePath.getIntersections(radiusPath);
+		var intersectionLocation = intersections[0];
 
 		if(!intersectionLocation) {
 			radiusPath = new Path([origin,getPointInCircle(10000, angle, origin)])
@@ -989,48 +824,8 @@
  			throw 'error intersection';
 			return;
 		}
-		//radiusPath.remove();
+		radiusPath.remove();
 		return intersectionLocation.point;
-	}
-
-	function averageColors(color1, color2) {
-		var c1 = color1.substring(1).match(/[\da-z]{2}/gi);
-		var c2 = color2.substring(1).match(/[\da-z]{2}/gi);
-
-		var avg = [];
-		for(var i=0 ; i < 3 ; i++)
-			avg.push((parseInt(c1[i], 16) + parseInt(c2[i], 16)) / 2);
-
-		return avg.reduce(function(p, c) {
-			return p + Math.round(c).toString(16);
-		}, '#');
-	}
-
-	function colorInRangeFromMultiplier(color1, color2, multiplier) {
-		var c1 = color1.substring(1).match(/[\da-z]{2}/gi);
-		var c2 = color2.substring(1).match(/[\da-z]{2}/gi);
-
-		var newColor = [];
-		for(var i=0 ; i < 3 ; i++) {
-			var colorHex1 = parseInt(c1[i], 16);
-			var colorHex2 = parseInt(c2[i], 16);
-
-			if(colorHex1 > colorHex2) {
-				var temp = colorHex1;
-				colorHex1 = colorHex2;
-				colorHex2 = temp;
-			}
-
-			var hexDelta = Math.abs(colorHex2 - colorHex1);
-			var colorHex = Math.round(hexDelta * multiplier);
-			colorHex += colorHex1;
-
-			newColor.push(colorHex);
-		}
-
-		return newColor.reduce(function(p, c) {
-			return p + c.toString(16);
-		}, '#');
 	}
 
 	function hashInput(str) {
@@ -1046,6 +841,12 @@
 	    return output.join('');
 	}
 
+  function generateSVG() {
+    console.log('exporting to svg');
+    var svg = paper.project.exportSVG();
+    console.log(svg);
+  }
+  document.querySelector("a").addEventListener("click", generateSVG)
 </script>
 </body>
 </html>

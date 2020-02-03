@@ -1,21 +1,20 @@
 # Tree-Ring Generation
 
-This projects goal was to create scalable vector graphics of tree rings. It works and generates graphics as pictured bellow but I never really liked the results.
+Simulates randomized enviornmental factors to "grow" a tree and then cut it down to see its age rings.
 
 <p style="text-align:center">
-  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample.png" width=1200px>
+  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample.png" width="100%">
 </p>
 
-You can read more about it [in this blog post](http://www.davidhampgonsalves.com/failed-projects-tree-ring-generation/)
+## Running
+Load `tree.htm` in a browser (Ideally Firefox).
 
-## Install
-`bowser install`
-Load tree.htm in chrome.
+Each time the page loads it will generate a new tree ring. Once you have one you like click the generate SVG link, which will write the svg markup to the console for you to copy into a file.
 
-_or to generate an SVG_
+If the script blows up or generates something bizzare, take a deep breath and refresh the page. This code is inefficient, error prone and a mess caused by its many purposes and long life.
 
-```
-npm install
-node treeGenerate.js
-```
-_note: SVG generation is a heavy process and paper.js often dies._
+## History
+
+Originally this code generated color svg files but I was never happy with the results (see [old commit](https://github.com/davidhampgonsalves/tree-rings/tree/a574a05993379ea14bbe47f3019c5f65fad7595e) for samples). After building a [MidTBot](https://github.com/bdring/midTbot_esp32) I modified the code to generate a more plotable svg.
+
+You can read more about the original idea [in this blog post](https://www.davidhampgonsalves.com/failed-projects-tree-ring-generation/).
