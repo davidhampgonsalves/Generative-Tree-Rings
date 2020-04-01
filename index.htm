@@ -286,9 +286,7 @@
         complexPath.remove();
         path.remove();
         defectShape.remove();
-
-        // removing tmp here causes defects to go crazy
-        // tmp.remove();
+        tmp.remove();
       }
       return pathWithDefects;
 		}
@@ -318,8 +316,13 @@
 
 			var gap = this.seedGenerator.getGap(year);
 			var inGap = false;
-      var OFFSET = 0.75; // this changes the ring style, 1 makes it zigzags
-			for(var offset=0, len=path.length ; offset < len ; offset+=OFFSET) {
+
+      var OFFSET = 3;
+      var MIN = 0.7;
+      var N = 5;
+      var gapCount = 0;
+      if(year < N) OFFSET = MIN + (((OFFSET - MIN) / N) * year);
+			for(var offset=0, len=path.length, index=0 ; offset < len ; offset+=OFFSET, index += 1) {
 
 				var outerPoint = path.getPointAt(offset);
 				var childPoint = findIntersectionPointInCircle(childPath, outerPoint, this.origin);
@@ -348,6 +351,7 @@
 				// apply gaps
 				var positionPercent = offset / len;
 				if(gap) {
+          gapCount += 1;
 					if(!inGap && positionPercent > gap.startPercent && positionPercent < gap.endPercent)
 						inGap = true;
 
@@ -358,12 +362,38 @@
 				}
 
 				if(!inGap) {
+          var i = index - gapCount;
+
 					outerPath.add(outerPoint);
 					innerPath.add(innerPoint);
+          var midPoint = path.getPointAt(offset + (OFFSET / 2));
+          var innerMidPoint = midPoint ? getPointInCircle(radius - jitter, getAngleInCircle(midPoint, this.origin), this.origin) : innerPoint;
+          var outerMidPoint = midPoint ? getPointInCircle(radius + darkRingThickness, getAngleInCircle(midPoint, this.origin), this.origin) : outerPoint;
 
-          ringFill.add(offset % 1 ? outerPoint : innerPoint);
-          // TODO: this results in double lining but looks better I think
-          ringFill.add(offset % 1 ? innerPoint : outerPoint);
+          var fill = this.seed.fill;
+          if(fill == "zigzag") {
+            ringFill.add(innerPoint);
+            ringFill.add(outerMidPoint);
+          } else if(fill === "spikes-inset") {
+            ringFill.add(outerPoint);
+            ringFill.add(outerMidPoint);
+            ringFill.add(innerMidPoint);
+            ringFill.add(outerMidPoint);
+          } else if(fill === "spikes-outset") {
+            ringFill.add(innerPoint);
+            ringFill.add(innerMidPoint);
+            ringFill.add(outerMidPoint);
+            ringFill.add(innerMidPoint);
+          } else if(fill === "square-alt") { // square alternating w/angle
+            ringFill.add(innerPoint);
+            ringFill.add(outerPoint);
+            ringFill.add(outerMidPoint);
+          } else if(fill === "square") { // square wave
+            ringFill.add(innerPoint);
+            ringFill.add(outerPoint);
+            ringFill.add(outerMidPoint);
+            ringFill.add(innerMidPoint);
+          }
 				}
 			}
 
@@ -374,7 +404,6 @@
 
 			outerPath.visible = true;
 			innerPath.visible = true;
-
       innerPath.strokeColor = "red";
       outerPath.strokeColor = "green";
 
@@ -614,6 +643,7 @@
 			var seedType = seedTypes[this.nextIndex(seedTypes.length)];
       //seedType = seedTypes[2];
 
+      var FILLS = ["spikes-inset", "spikes-outset", "zigzag", "square", "square-alt"];
 			this.seed = {
 				name: this.input,
 				thickness: {
@@ -621,6 +651,7 @@
 					min: minThickness,
 					darkPercent: 0.3 + this.nextInRange(0.15)
 				},
+        fill: FILLS[this.nextIndex(FILLS.length)],
 				knotPath: knotPath,
 				gaps: gaps,
 				years: years,
