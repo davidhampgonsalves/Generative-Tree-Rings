@@ -20,62 +20,48 @@
 
 	var seedTypes = [
 		{
-			name: 'White Oak',
-			scientificName: 'Quercus alba',
 			bark: {
 				thickness: {
 					max: 35,
-					min: 20
+					min: 9,
 				},
-				roughness: 0.8
+				roughness: 0.2
 			},
 		},
-
 		{
-			name: 'White Poplar',
-			scientificName: 'Populus alba',
 			bark: {
 				thickness: {
-					max: 12,
-					min: 8
+					max: 35,
+					min: 9,
+				},
+				roughness: 0.5
+			},
+		},
+		{
+			bark: {
+				thickness: {
+					max: 17,
+					min: 9,
 				},
 				roughness: 0.3
 			},
 		},
-
 		{
-			name:'Willow',
-			scientificName: 'Salix alba',
 			bark: {
 				thickness: {
-					max: 15,
-					min: 10
+					max: 25,
+					min: 13,
+				},
+				roughness: 0.4
+			},
+		},
+		{
+			bark: {
+				thickness: {
+					max: 25,
+					min: 13,
 				},
 				roughness: 0.1
-			},
-		},
-
-		{
-			name: 'Bristlecone Pine',
-			scientificName: 'Pinus aristata',
-			bark: {
-				thickness: {
-					max: 35,
-					min: 10
-				},
-				roughness: 0.3
-			},
-		},
-
-		{
-			name: 'Hemlock',
-			scientificName: 'Tsuga sieboldii)',
-			bark: {
-				thickness: {
-					max: 30,
-					min: 20
-				},
-				roughness: 1.2
 			},
 		},
 	];
@@ -123,23 +109,15 @@
 	var child = paths[paths.length-1];
 	var parent = paths[paths.length-2];
 
-	var barkPath = ringGenerator.generateBark(child.complexPath, parent.complexPath);
-	illustrator.illustrateBark(barkPath.complexPath, outerIllustratedPath);
+	var barkPaths = ringGenerator.generateBark(parent.complexPath);
+	illustrator.illustrateBark(barkPaths.inner, barkPaths.outer);
 
 	illustrator.illustrateCracks(paths);
-  // This is too heavy and would result in a ton of up/downs
-	//illustrator.illustrateGrain(outerIllustratedPath);
-
-	// illustrator.illustrateTitle(outerIllustratedPath);
 
 	for(var i=paths.length-1 ; i >= 0 ; i--) {
 		paths[i].complexPath.remove();
 		paths[i].simplePath.remove();
 	}
-
-	//console.log('exporting to svg');
-	//var svg = paper.project.exportSVG();
-  //console.log(svg);
 
 	function RingGenerator(origin, seedGenerator) {
 		this.seedGenerator = seedGenerator;
@@ -168,14 +146,14 @@
 			return {simplePath: knotPath, complexPath: knotPath};
 		}
 
-		this.generateBark = function generateBark(parentPath, childPath) {
-			var barkBasePath = childPath;
-
+		this.generateBark = function generateBark(parentPath) {
 			var barkPath = new Path();
+			var innerPath = new Path();
+
 			var seedDigitIndex = 0;
 			var radiusDelta = 0;
-			for(var offset=0, len=barkBasePath.length ; offset < len ; offset += this.seedGenerator.nextInRange(0.1, 25)) {
-				var point = barkBasePath.getPointAt(offset);
+			for(var offset=0, len=parentPath.length ; offset < len ; offset += this.seedGenerator.nextInRange(0.1, 25)) {
+				var point = parentPath.getPointAt(offset);
 
 				var radius = this.origin.getDistance(point) + this.seed.bark.thickness.max;
 
@@ -193,11 +171,24 @@
 				barkPath.add(point);
 			}
 
+			for(var offset=0, len=parentPath.length, index=0 ; offset < len ; offset+=3, index += 1) {
+				var point = parentPath.getPointAt(offset);
+				var radius = this.origin.getDistance(point) + this.seed.bark.thickness.min;
+				var angle = getAngleInCircle(point, this.origin);
+				var angleRange = this.seed.bark.roughness * 0.01;
+				angle += this.seedGenerator.nextInRange(-angleRange, angleRange);
+
+				point = getPointInCircle(radius, angle, this.origin);
+
+				innerPath.add(point);
+      }
+
 			barkPath.closed = true;
+			innerPath.closed = true;
 
 			barkPath.smooth();
 
-			return {simplePath: barkPath, complexPath: barkPath};
+			return { inner: innerPath, outer: barkPath };
 		}
 
 		this.generate = function generate(parentPath) {
@@ -318,7 +309,7 @@
 			var inGap = false;
 
       var OFFSET = 3;
-      var MIN = 0.7;
+      var MIN = 1.3;
       var N = 5;
       var gapCount = 0;
       if(year < N) OFFSET = MIN + (((OFFSET - MIN) / N) * year);
@@ -397,11 +388,6 @@
 				}
 			}
 
-			/*if(options.smoothOuterRing)
-				outerPath.strokeWidth = 0;
-			else
-				outerPath.strokeWidth = this.seed.thickness.darkPercent * darkRingThickness;*/
-
 			outerPath.visible = true;
 			innerPath.visible = true;
       innerPath.strokeColor = "red";
@@ -414,104 +400,32 @@
 			return outerPath;
 		}
 
-		this.illustrateBark = function illustrateBark(barkPath, parentPath) {
-			var outerPath = barkPath.clone();
-			var innerPath = new Path();
-      var barkFill = new Path();
-      var barkFillReverse = new Path();
+		this.illustrateBark = function illustrateBark(outerPath, innerPath) {
+      var fillPath = new Path();
+      fillPath.strokeColor = "blue";
 
-      //var edgeFill = new Path();
+      var fill = this.seed.barkFill;
+      var OFFSET = this.seed.barkFillSpacing;
+			for(var offset=0, len=innerPath.length, index=0 ; offset < len ; offset+=OFFSET, index += 1) {
+        var innerPoint = innerPath.getPointAt(offset);
+				var outerPoint = findIntersectionPointInCircle(outerPath, innerPoint, this.origin);
 
-			var outerBarkWidth = this.seed.thickness.max;
-      var RING_COUNT = 2;
-      for(var i=RING_COUNT, currentWidth=outerBarkWidth / RING_COUNT ; i > 0 ; i--) {
-        for(var offset=0, len=outerPath.length ; offset < len ; offset += this.seed.bark.roughness * 10) {
-          var point = outerPath.getPointAt(offset);
+        if(fill === "zigzag") {
+          fillPath.add(innerPoint);
+          fillPath.add(outerPoint);
+        } else {
+          var innerMidPoint = innerPath.getPointAt(offset + (OFFSET / 2));
+          var outerMidPoint = findIntersectionPointInCircle(outerPath, innerMidPoint, this.origin);
 
-          var radius = this.origin.getDistance(point) - currentWidth;
-          var radiusDelta = this.seed.bark.roughness * this.seedGenerator.nextInRange(this.seed.bark.thickness.min);
-          radius += radiusDelta;
-
-          var parentPoint = parentPath.getPointAt(offset)
-          var parentRadius = this.origin.getDistance(parentPoint);
-
-          var angle = getAngleInCircle(point, this.origin);
-          var innerPoint = getPointInCircle(radius, angle, this.origin);
-          innerPath.add(innerPoint);
-
-          var dir = barkFill.segments.length % 2;
-          barkFill.add(point);
-          barkFill.add(innerPoint);
-          barkFillReverse.add(innerPoint);
-          barkFill.add(point);
+          fillPath.add(innerPoint);
+          fillPath.add(outerPoint);
+          fillPath.add(outerMidPoint);
+          fillPath.add(innerMidPoint);
         }
       }
 		}
 
-		this.illustrateGrain = function illustrateGrain(outerPath) {
-
-			for(var i=12000 ; i > 0 ; i--) {
-				//get angle
-				var angle = this.seedGenerator.nextInRange(Math.PI * 2);
-				var length = this.seedGenerator.nextInRange(this.seed.thickness.max) / 2;
-
-				if(length < this.seed.thickness.min)
-					length = this.seed.thickness.min;
-
-				var intersectionLineEnd = getPointInCircle(1000, angle, this.origin);
-				var outerPoint = findIntersectionPointInCircle(outerPath, intersectionLineEnd, this.origin);
-
-				//multiplier * distance to outer path at that angle
-				var outerDistance = this.origin.getDistance(outerPoint);
-				var startRadius = this.seedGenerator.nextMultiplier() * outerDistance;
-				var endRadius = startRadius + length;
-
-				if(endRadius > outerDistance)
-					endRadius = outerDistance;
-
-				var startPoint = getPointInCircle(startRadius, angle, this.origin);
-				var endPoint = getPointInCircle(endRadius, angle, this.origin);
-
-				var grainPath = new Path([startPoint, endPoint]);
-				grainPath.visible = true;
-
-        grainPath.opacity = this.seedGenerator.nextInRange(0.4, 0.8);
-			}
-		}
-
-		this.illustrateTitle = function illustrateTitle(outerPath) {
-			// determine title start position
-
-			var intersecterPoint = getPointInCircle(1000, 0.7, this.origin);
-			var textPoint = findIntersectionPointInCircle(outerPath, intersecterPoint, this.origin);
-			var distance = this.origin.getDistance(textPoint);
-
-			// add offset to last ring position
-			distance += 60;
-			textPoint = adjustPointRadiusInCircle(distance, textPoint, this.origin);
-
-			// set text styles
-			var name = new PointText(textPoint);
-			name.justification = 'left';
-			name.fontSize = 30;
-			name.fontFamily = 'serif';
-
-			var offsetPoint = new Point(name.bounds.bottomLeft);
-			offsetPoint.y += 20;
-			offsetPoint.x += 5;
-
-			var subtext = new PointText(offsetPoint);
-			subtext.justification = 'left';
-			subtext.fontSize = 15;
-			subtext.fontFamily = 'serif';
-
-			name.content = this.seed.type.name;
-			subtext.content = '(' + this.seed.type.scientificName + ')';
-		}
-
 		this.illustrateCracks = function illustrateCracks(paths, years) {
-			// generate cracks
-			// TODO: this should be refactored into main loop
 			var cracks = [], crackCount = this.seedGenerator.nextIndex(this.seed.years);
 			for (var i=crackCount-1; i >= 0; i--) {
 				var start = this.seedGenerator.nextIndex(this.seed.years-3) + 1;
@@ -651,12 +565,14 @@
 					min: minThickness,
 					darkPercent: 0.3 + this.nextInRange(0.15)
 				},
-        fill: FILLS[this.nextIndex(FILLS.length)],
 				knotPath: knotPath,
 				gaps: gaps,
 				years: years,
 				type: seedType,
+        fill: FILLS[this.nextIndex(FILLS.length)],
 				bark: seedType.bark,
+        barkFill: this.nextBoolean() ? "zigzag" : "straight-lines",
+        barkFillSpacing: this.nextInRange(3, 9),
 				environment: this.generateEnvironment(years)
 			};
 
