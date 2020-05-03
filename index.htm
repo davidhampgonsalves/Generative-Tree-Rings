@@ -17,6 +17,12 @@
 	<canvas id='tree' resize></canvas>
 
 <script type="text/paperscript" canvas="tree">
+  function generateSVG() {
+    console.log('exporting to svg');
+    var svg = paper.project.exportSVG();
+    console.log(svg);
+  }
+  document.querySelector("a").addEventListener("click", generateSVG)
 
 	var seedTypes = [
 		{
@@ -787,13 +793,6 @@
 	    }
 	    return output.join('');
 	}
-
-  function generateSVG() {
-    console.log('exporting to svg');
-    var svg = paper.project.exportSVG();
-    console.log(svg);
-  }
-  document.querySelector("a").addEventListener("click", generateSVG)
 </script>
 </body>
 </html>

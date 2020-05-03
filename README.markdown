@@ -3,7 +3,7 @@
 Simulates randomized enviornmental factors to "grow" a tree and then cut it down to see its age rings.
 
 <p style="text-align:center">
-  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample.png" width="100%">
+  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample-01.jpg" width="100%">
 </p>
 
 ## Running
@@ -18,3 +18,15 @@ If the script blows up or generates something bizzare, take a deep breath and re
 Originally this code generated color svg files but I was never happy with the results (see [old commit](https://github.com/davidhampgonsalves/tree-rings/tree/a574a05993379ea14bbe47f3019c5f65fad7595e) for samples). After building a [MidTBot](https://github.com/bdring/midTbot_esp32) I modified the code to generate a more plotable svg.
 
 You can read more about the original idea [in this blog post](https://www.davidhampgonsalves.com/failed-projects-tree-ring-generation/).
+
+<p style="text-align:center">
+  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample-03.jpg" width="100%">
+</p>
+
+<p style="text-align:center">
+  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample-05.jpg" width="100%">
+</p>
+
+<p style="text-align:center">
+  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample-07.jpg" width="100%">
+</p>
