@@ -3,7 +3,7 @@
 Simulates randomized enviornmental factors to "grow" a tree and then cut it down to see its age rings.
 
 <p style="text-align:center">
-  <img src="https://github.com/davidhampgonsalves/tree-rings/blob/master/sample-01.jpg" width="100%">
+  <img src="https://github.com/davidhampgonsalves/tree-rings/raw/master/sample-01.jpg" width="100%">
 </p>
 
 ## Running
